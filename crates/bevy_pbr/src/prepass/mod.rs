@@ -463,6 +463,8 @@ where
         );
         bind_group_layouts.insert(1, bind_group);
 
+        M::specialize_vertex_attributes(&self.material_pipeline, &mut vertex_attributes)?;
+
         let vertex_buffer_layout = layout.0.get_layout(&vertex_attributes)?;
 
         // Setup prepass fragment targets - normals in slot 0 (or None if not needed), motion vectors in slot 1

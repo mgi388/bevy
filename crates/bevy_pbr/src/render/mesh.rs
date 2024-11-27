@@ -1661,6 +1661,10 @@ impl SpecializedMeshPipeline for MeshPipeline {
             &mut vertex_attributes,
         ));
 
+        if layout.0.contains(ATTRIBUTE_TEXTURE_INDEX) {
+            vertex_attributes.push(ATTRIBUTE_TEXTURE_INDEX.at_shader_location(10));
+        }
+
         if key.contains(MeshPipelineKey::SCREEN_SPACE_AMBIENT_OCCLUSION) {
             shader_defs.push("SCREEN_SPACE_AMBIENT_OCCLUSION".into());
         }
@@ -1923,6 +1927,9 @@ impl SpecializedMeshPipeline for MeshPipeline {
         })
     }
 }
+
+const ATTRIBUTE_TEXTURE_INDEX: MeshVertexAttribute =
+    MeshVertexAttribute::new("TextureIndex", 988540918, VertexFormat::Uint32);
 
 /// Bind groups for meshes currently loaded.
 #[derive(Resource, Default)]

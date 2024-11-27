@@ -25,7 +25,7 @@ use bevy_render::{
     camera::TemporalJitter,
     extract_instances::{ExtractInstancesPlugin, ExtractedInstances},
     extract_resource::ExtractResource,
-    mesh::{GpuMesh, MeshVertexBufferLayoutRef},
+    mesh::{GpuMesh, MeshVertexBufferLayoutRef, VertexAttributeDescriptor},
     render_asset::{PrepareAssetError, RenderAsset, RenderAssetPlugin, RenderAssets},
     render_phase::*,
     render_resource::*,
@@ -215,6 +215,15 @@ pub trait Material: Asset + AsBindGroup + Clone + Sized {
         descriptor: &mut RenderPipelineDescriptor,
         layout: &MeshVertexBufferLayoutRef,
         key: MaterialPipelineKey<Self>,
+    ) -> Result<(), SpecializedMeshPipelineError> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    #[inline]
+    fn specialize_vertex_attributes(
+        _pipeline: &MaterialPipeline<Self>,
+        attrs: &mut Vec<VertexAttributeDescriptor>,
     ) -> Result<(), SpecializedMeshPipelineError> {
         Ok(())
     }
