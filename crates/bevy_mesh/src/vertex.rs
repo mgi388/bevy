@@ -116,6 +116,7 @@ pub struct MissingVertexAttributeError {
     name: &'static str,
 }
 
+#[derive(Debug)]
 pub struct VertexAttributeDescriptor {
     pub shader_location: u32,
     pub id: MeshVertexAttributeId,
