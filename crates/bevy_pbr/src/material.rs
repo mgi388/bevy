@@ -29,7 +29,7 @@ use bevy_render::view::RenderVisibleEntities;
 use bevy_render::{
     camera::TemporalJitter,
     extract_resource::ExtractResource,
-    mesh::{Mesh3d, MeshVertexBufferLayoutRef, RenderMesh},
+    mesh::{Mesh3d, MeshVertexBufferLayoutRef, RenderMesh, VertexAttributeDescriptor},
     render_asset::{PrepareAssetError, RenderAsset, RenderAssetPlugin, RenderAssets},
     render_phase::*,
     render_resource::*,
@@ -235,6 +235,15 @@ pub trait Material: Asset + AsBindGroup + Clone + Sized {
         descriptor: &mut RenderPipelineDescriptor,
         layout: &MeshVertexBufferLayoutRef,
         key: MaterialPipelineKey<Self>,
+    ) -> Result<(), SpecializedMeshPipelineError> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    #[inline]
+    fn specialize_vertex_attributes(
+        _pipeline: &MaterialPipeline<Self>,
+        attrs: &mut Vec<VertexAttributeDescriptor>,
     ) -> Result<(), SpecializedMeshPipelineError> {
         Ok(())
     }
