@@ -11,14 +11,11 @@
 extern crate alloc;
 
 mod bundle;
-mod dynamic_texture_atlas_builder;
 mod mesh2d;
 #[cfg(feature = "bevy_sprite_picking_backend")]
 mod picking_backend;
 mod render;
 mod sprite;
-mod texture_atlas;
-mod texture_atlas_builder;
 mod texture_slice;
 
 /// The sprite prelude.
@@ -30,29 +27,25 @@ pub mod prelude {
     pub use crate::{
         bundle::SpriteBundle,
         sprite::{Sprite, SpriteImageMode},
-        texture_atlas::{TextureAtlas, TextureAtlasLayout, TextureAtlasSources},
         texture_slice::{BorderRect, SliceScaleMode, TextureSlice, TextureSlicer},
-        ColorMaterial, ColorMesh2dBundle, MeshMaterial2d, TextureAtlasBuilder,
+        ColorMaterial, ColorMesh2dBundle, MeshMaterial2d,
     };
 }
 
 use bevy_reflect::{std_traits::ReflectDefault, Reflect};
 pub use bundle::*;
-pub use dynamic_texture_atlas_builder::*;
 pub use mesh2d::*;
 #[cfg(feature = "bevy_sprite_picking_backend")]
 pub use picking_backend::*;
 pub use render::*;
 pub use sprite::*;
-pub use texture_atlas::*;
-pub use texture_atlas_builder::*;
 pub use texture_slice::*;
 
 use bevy_app::prelude::*;
 use bevy_asset::{load_internal_asset, AssetApp, Assets, Handle};
 use bevy_core_pipeline::core_2d::Transparent2d;
 use bevy_ecs::{prelude::*, query::QueryItem};
-use bevy_image::Image;
+use bevy_image::prelude::*;
 use bevy_render::{
     extract_component::{ExtractComponent, ExtractComponentPlugin},
     mesh::{Mesh, Mesh2d, MeshAabb},
@@ -114,13 +107,10 @@ impl Plugin for SpritePlugin {
             "render/sprite_view_bindings.wgsl",
             Shader::from_wgsl
         );
-        app.init_asset::<TextureAtlasLayout>()
-            .register_asset_reflect::<TextureAtlasLayout>()
-            .register_type::<Sprite>()
+        app.register_type::<Sprite>()
             .register_type::<SpriteImageMode>()
             .register_type::<TextureSlicer>()
             .register_type::<Anchor>()
-            .register_type::<TextureAtlas>()
             .register_type::<Mesh2d>()
             .register_type::<SpriteSource>()
             .add_plugins((

@@ -1,10 +1,5 @@
-use bevy_asset::AssetId;
-use bevy_image::{Image, TextureFormatPixelInfo};
+use bevy_asset::{AssetId, RenderAssetUsages};
 use bevy_math::{URect, UVec2};
-use bevy_render::{
-    render_asset::RenderAssetUsages,
-    render_resource::{Extent3d, TextureDimension, TextureFormat},
-};
 use bevy_utils::{
     tracing::{debug, error, warn},
     HashMap,
@@ -14,7 +9,9 @@ use rectangle_pack::{
     RectToInsert, TargetBin,
 };
 use thiserror::Error;
+use wgpu_types::{Extent3d, TextureDimension, TextureFormat};
 
+use crate::{Image, TextureFormatPixelInfo};
 use crate::{TextureAtlasLayout, TextureAtlasSources};
 
 #[derive(Debug, Error)]
@@ -179,7 +176,7 @@ impl<'a> TextureAtlasBuilder<'a> {
     /// # use bevy_ecs::prelude::*;
     /// # use bevy_asset::*;
     /// # use bevy_render::prelude::*;
-    /// # use bevy_image::Image;
+    /// # use bevy_image::prelude::*;
     ///
     /// fn my_system(mut commands: Commands, mut textures: ResMut<Assets<Image>>, mut layouts: ResMut<Assets<TextureAtlasLayout>>) {
     ///     // Declare your builder
