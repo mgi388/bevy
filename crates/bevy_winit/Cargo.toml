@@ -22,8 +22,7 @@ custom_cursor = ["bevy_image", "bevy_asset", "bytemuck", "wgpu-types"]
 
 
 [dependencies]
-# bevy
-bevy_a11y = { path = "../bevy_a11y", version = "0.15.2" }
+bevy_a11y = { path = "../bevy_a11y", version = "0.15.2" }           # bevy
 bevy_app = { path = "../bevy_app", version = "0.15.2" }
 bevy_derive = { path = "../bevy_derive", version = "0.15.2" }
 bevy_ecs = { path = "../bevy_ecs", version = "0.15.2" }
@@ -34,6 +33,7 @@ bevy_math = { path = "../bevy_math", version = "0.15.2" }
 bevy_reflect = { path = "../bevy_reflect", version = "0.15.2" }
 bevy_window = { path = "../bevy_window", version = "0.15.2" }
 bevy_utils = { path = "../bevy_utils", version = "0.15.2" }
+bevy_sprite = { path = "../bevy_sprite", version = "0.15.0" }
 bevy_tasks = { path = "../bevy_tasks", version = "0.15.2" }
 
 # bevy optional
