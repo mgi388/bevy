@@ -681,6 +681,7 @@ pub fn prepare_lights(
             &ExtractedView,
             &ExtractedClusterConfig,
             Option<&RenderLayers>,
+            Option<&AmbientLight>,
         ),
         With<Camera3d>,
     >,
@@ -1092,7 +1093,7 @@ pub fn prepare_lights(
     let mut live_views = EntityHashSet::with_capacity_and_hasher(views_count, EntityHash);
 
     // set up light data for each view
-    for (entity, extracted_view, clusters, maybe_layers) in sorted_cameras
+    for (entity, extracted_view, clusters, maybe_layers, maybe_ambient_override) in sorted_cameras
         .0
         .iter()
         .filter_map(|sorted_camera| views.get(sorted_camera.entity).ok())
@@ -1109,6 +1110,7 @@ pub fn prepare_lights(
         );
 
         let n_clusters = clusters.dimensions.x * clusters.dimensions.y * clusters.dimensions.z;
+        let ambient_light = maybe_ambient_override.unwrap_or(&ambient_light);
         let mut gpu_lights = GpuLights {
             directional_lights: gpu_directional_lights,
             ambient_color: Vec4::from_slice(&LinearRgba::from(ambient_light.color).to_f32_array())
