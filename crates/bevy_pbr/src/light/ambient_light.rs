@@ -15,8 +15,9 @@ use super::*;
 ///    ambient_light.brightness = 100.0;
 /// }
 /// ```
-#[derive(Resource, Clone, Debug, ExtractResource, Reflect)]
-#[reflect(Resource, Debug, Default)]
+#[derive(Resource, Component, Clone, Debug, ExtractResource, ExtractComponent, Reflect)]
+#[reflect(Resource, Component, Debug, Default)]
+#[require(Camera)]
 pub struct AmbientLight {
     pub color: Color,
     /// A direct scale factor multiplied with `color` before being passed to the shader.
