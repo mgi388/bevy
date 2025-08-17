@@ -19,7 +19,7 @@ use bevy_input::{
 use bevy_log::{error, trace, warn};
 #[cfg(feature = "custom_cursor")]
 use bevy_math::URect;
-use bevy_math::{ivec2, DVec2, Vec2};
+use bevy_math::{ivec2, DVec2, UVec2, Vec2};
 #[cfg(feature = "custom_cursor")]
 use bevy_sprite::TextureAtlasLayout;
 #[cfg(not(target_arch = "wasm32"))]
@@ -157,6 +157,7 @@ pub enum CustomCursorCacheKey {
         flip_x: bool,
         flip_y: bool,
         rect: Option<URect>,
+        custom_size: Option<UVec2>,
     },
     #[cfg(all(target_family = "wasm", target_os = "unknown"))]
     /// A custom cursor with a URL.
