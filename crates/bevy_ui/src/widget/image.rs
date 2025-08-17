@@ -130,6 +130,74 @@ impl ImageNode {
         self.image_mode = mode;
         self
     }
+
+    /// Computes the pixel point where `point_relative_to_sprite` is sampled
+    /// from in this sprite. `point_relative_to_sprite` must be in the sprite's
+    /// local frame. Returns an Ok if the point is inside the bounds of the
+    /// sprite (not just the image), and returns an Err otherwise.
+    pub fn compute_pixel_space_point(
+        &self,
+        point_relative_to_sprite: Vec2,
+        images: &Assets<Image>,
+        texture_atlases: &Assets<TextureAtlasLayout>,
+    ) -> Result<Vec2, Vec2> {
+        let image_size = images
+            .get(&self.image)
+            .map(Image::size)
+            .unwrap_or(UVec2::ONE);
+
+        let atlas_rect = self
+            .texture_atlas
+            .as_ref()
+            .and_then(|s| s.texture_rect(texture_atlases))
+            .map(|r| r.as_rect());
+        let texture_rect = match (atlas_rect, self.rect) {
+            (None, None) => Rect::new(0.0, 0.0, image_size.x as f32, image_size.y as f32),
+            (None, Some(sprite_rect)) => sprite_rect,
+            (Some(atlas_rect), None) => atlas_rect,
+            (Some(atlas_rect), Some(mut sprite_rect)) => {
+                // Make the sprite rect relative to the atlas rect.
+                sprite_rect.min += atlas_rect.min;
+                sprite_rect.max += atlas_rect.min;
+                sprite_rect
+            }
+        };
+
+        let sprite_size = texture_rect.size();
+        let anchor = Vec2::ZERO;
+        let sprite_center = -anchor * sprite_size;
+
+        let mut point_relative_to_sprite_center = point_relative_to_sprite - sprite_center;
+
+        if self.flip_x {
+            point_relative_to_sprite_center.x *= -1.0;
+        }
+        // Texture coordinates start at the top left, whereas world coordinates start at the bottom
+        // left. So flip by default, and then don't flip if `flip_y` is set.
+        if !self.flip_y {
+            point_relative_to_sprite_center.y *= -1.0;
+        }
+
+        let sprite_to_texture_ratio = {
+            let texture_size = texture_rect.size();
+            let div_or_zero = |a, b| if b == 0.0 { 0.0 } else { a / b };
+            Vec2::new(
+                div_or_zero(texture_size.x, sprite_size.x),
+                div_or_zero(texture_size.y, sprite_size.y),
+            )
+        };
+
+        let point_relative_to_texture =
+            point_relative_to_sprite_center * sprite_to_texture_ratio + texture_rect.center();
+
+        // TODO: Support `SpriteImageMode`.
+
+        if texture_rect.contains(point_relative_to_texture) {
+            Ok(point_relative_to_texture)
+        } else {
+            Err(point_relative_to_texture)
+        }
+    }
 }
 
 impl From<Handle<Image>> for ImageNode {

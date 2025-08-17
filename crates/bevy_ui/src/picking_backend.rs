@@ -25,9 +25,14 @@
 
 use crate::{focus::pick_rounded_rect, prelude::*, UiStack};
 use bevy_app::prelude::*;
+use bevy_asset::Assets;
+use bevy_color::Alpha as _;
+use bevy_core::Name;
 use bevy_ecs::{prelude::*, query::QueryData};
+use bevy_image::Image;
 use bevy_math::{Rect, Vec2};
 use bevy_render::prelude::*;
+use bevy_sprite::TextureAtlasLayout;
 use bevy_transform::prelude::*;
 use bevy_utils::hashbrown::HashMap;
 use bevy_window::PrimaryWindow;
@@ -54,6 +59,8 @@ pub struct NodeQuery {
     calculated_clip: Option<&'static CalculatedClip>,
     view_visibility: Option<&'static ViewVisibility>,
     target_camera: Option<&'static TargetCamera>,
+    image: Option<&'static ImageNode>,
+    name: Option<&'static Name>,
 }
 
 /// Computes the UI node entities under each pointer.
@@ -61,6 +68,8 @@ pub struct NodeQuery {
 /// Bevy's [`UiStack`] orders all nodes in the order they will be rendered, which is the same order
 /// we need for determining picking.
 pub fn ui_picking(
+    images: Res<Assets<Image>>,
+    texture_atlas_layout: Res<Assets<TextureAtlasLayout>>,
     pointers: Query<(&PointerId, &PointerLocation)>,
     camera_query: Query<(Entity, &Camera, Has<IsDefaultUiCamera>)>,
     default_ui_camera: DefaultUiCamera,
@@ -171,6 +180,69 @@ pub fn ui_picking(
                     node.node.border_radius,
                 )
             {
+                let name = node
+                    .name
+                    .map(|name| name.as_str())
+                    .unwrap_or_else(|| "unnamed");
+
+                let cursor_in_valid_pixels_of_sprite = 'valid_pixel: {
+                    break 'valid_pixel false; // TODO: remove this line
+
+                    let cutoff = 0.1;
+
+                    let Some(image) = node.image else {
+                        break 'valid_pixel true;
+                    };
+
+                    let Some(image) = images.get(&image.image) else {
+                        // [`Sprite::from_color`] returns a defaulted handle.
+                        // This handle doesn't return a valid image, so returning false here would make picking "color sprites" impossible
+                        break 'valid_pixel true;
+                    };
+                    let Ok(cursor_pixel_space) = node.image.unwrap().compute_pixel_space_point(
+                        *cursor_position - node_rect.center(),
+                        &images,
+                        &texture_atlas_layout,
+                    ) else {
+                        break 'valid_pixel false;
+                    };
+                    println!(
+                        "{}: image handle: {:?}, relative_cursor_position: {:?}, node_rect.size: {:?}, image.width: {:?}, image.height: {:?}: x: {:?}, y: {:?}, image format: {:?}, cursor_pixel_space: {:?}",
+                        name,
+                        node.image.unwrap().image,
+                        relative_cursor_position,
+                        node_rect.size(),
+                        image.width(),
+                        image.height(),
+                        relative_cursor_position.x * image.width() as f32,
+                        relative_cursor_position.y * image.height() as f32,
+                        image.texture_descriptor.format,
+                        cursor_pixel_space,
+                    );
+                    // grab pixel and check alpha
+                    let Ok(color) = image.get_color_at(
+                        // (relative_cursor_position.x * image.width() as f32) as u32,
+                        // (relative_cursor_position.y * image.height() as f32) as u32,
+                        cursor_pixel_space.x as u32,
+                        cursor_pixel_space.y as u32,
+                    ) else {
+                        // We don't know how to interpret the pixel.
+                        break 'valid_pixel false;
+                    };
+                    println!("{}: color: {:?}", name, color);
+                    // Check the alpha is above the cutoff.
+                    color.alpha() > cutoff
+                };
+
+                // println!(
+                //     "{}: cursor_in_valid_pixels_of_sprite: {}",
+                //     name, cursor_in_valid_pixels_of_sprite
+                // );
+
+                if !cursor_in_valid_pixels_of_sprite {
+                    // continue;
+                }
+
                 hit_nodes
                     .entry((camera_entity, *pointer_id))
                     .or_default()
