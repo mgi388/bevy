@@ -585,7 +585,9 @@ impl PrepassPipelineInternal {
         );
         bind_group_layouts.insert(1, bind_group);
 
-        vertex_attributes.push(ATTRIBUTE_TEXTURE_INDEX.at_shader_location(10));
+        if layout.0.contains(ATTRIBUTE_TEXTURE_INDEX) {
+            vertex_attributes.push(ATTRIBUTE_TEXTURE_INDEX.at_shader_location(10));
+        }
 
         let vertex_buffer_layout = layout.0.get_layout(&vertex_attributes)?;
         // Setup prepass fragment targets - normals in slot 0 (or None if not needed), motion vectors in slot 1
