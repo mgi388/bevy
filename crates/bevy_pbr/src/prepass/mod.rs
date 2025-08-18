@@ -8,6 +8,7 @@ use crate::{
     MeshLayouts, MeshPipeline, MeshPipelineKey, OpaqueRendererMethod, PreparedMaterial,
     RenderLightmaps, RenderMaterialInstances, RenderMeshInstanceFlags, RenderMeshInstances,
     RenderPhaseType, SetMaterialBindGroup, SetMeshBindGroup, ShadowView, StandardMaterial,
+    ATTRIBUTE_TEXTURE_INDEX,
 };
 use bevy_app::{App, Plugin, PreUpdate};
 use bevy_render::{
@@ -583,6 +584,9 @@ impl PrepassPipelineInternal {
             self.skins_use_uniform_buffers,
         );
         bind_group_layouts.insert(1, bind_group);
+
+        vertex_attributes.push(ATTRIBUTE_TEXTURE_INDEX.at_shader_location(10));
+
         let vertex_buffer_layout = layout.0.get_layout(&vertex_attributes)?;
         // Setup prepass fragment targets - normals in slot 0 (or None if not needed), motion vectors in slot 1
         let mut targets = prepass_target_descriptors(
