@@ -363,9 +363,9 @@ impl RenderLightmaps {
     /// slab index.
     fn create_slab(&mut self, fallback_images: &FallbackImage) -> LightmapSlabIndex {
         let slab_index = LightmapSlabIndex::from(self.slabs.len());
-        self.free_slabs.grow_and_insert(slab_index.into());
         self.slabs
             .push(LightmapSlab::new(fallback_images, self.bindless_supported));
+        self.free_slabs.grow_and_insert(slab_index.into());
         slab_index
     }
 
@@ -398,7 +398,7 @@ impl RenderLightmaps {
         slab.remove(fallback_images, slot_index);
 
         if !slab.is_full() {
-            self.free_slabs.grow_and_insert(slot_index.into());
+            self.free_slabs.grow_and_insert(slab_index.into());
         }
     }
 }
