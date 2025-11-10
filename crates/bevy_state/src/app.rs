@@ -1,5 +1,5 @@
 use bevy_app::{App, MainScheduleOrder, Plugin, PreStartup, PreUpdate, SubApp};
-use bevy_ecs::{event::Events, schedule::IntoScheduleConfigs, world::FromWorld};
+use bevy_ecs::{event::Events, schedule::IntoScheduleConfigs as _, world::FromWorld};
 use bevy_utils::once;
 use log::warn;
 
@@ -110,9 +110,7 @@ impl AppExtStates for SubApp {
                 exited: None,
                 entered: Some(state),
             });
-            if S::SCOPED_ENTITIES_ENABLED {
-                self.enable_state_scoped_entities::<S>();
-            }
+            enable_state_scoped_entities::<S>(self);
         } else {
             let name = core::any::type_name::<S>();
             warn!("State {} is already initialized.", name);
@@ -135,9 +133,7 @@ impl AppExtStates for SubApp {
                 exited: None,
                 entered: Some(state),
             });
-            if S::SCOPED_ENTITIES_ENABLED {
-                self.enable_state_scoped_entities::<S>();
-            }
+            enable_state_scoped_entities::<S>(self);
         } else {
             // Overwrite previous state and initial event
             self.insert_resource::<State<S>>(State::new(state.clone()));
@@ -172,9 +168,7 @@ impl AppExtStates for SubApp {
                 exited: None,
                 entered: state,
             });
-            if S::SCOPED_ENTITIES_ENABLED {
-                self.enable_state_scoped_entities::<S>();
-            }
+            enable_state_scoped_entities::<S>(self);
         } else {
             let name = core::any::type_name::<S>();
             warn!("Computed state {} is already initialized.", name);
@@ -203,9 +197,7 @@ impl AppExtStates for SubApp {
                 exited: None,
                 entered: state,
             });
-            if S::SCOPED_ENTITIES_ENABLED {
-                self.enable_state_scoped_entities::<S>();
-            }
+            enable_state_scoped_entities::<S>(self);
         } else {
             let name = core::any::type_name::<S>();
             warn!("Sub state {} is already initialized.", name);
@@ -215,19 +207,7 @@ impl AppExtStates for SubApp {
     }
 
     fn enable_state_scoped_entities<S: States>(&mut self) -> &mut Self {
-        if !self
-            .world()
-            .contains_resource::<Events<StateTransitionEvent<S>>>()
-        {
-            let name = core::any::type_name::<S>();
-            warn!("State scoped entities are enabled for state `{}`, but the state isn't installed in the app!", name);
-        }
-        // We work with [`StateTransition`] in set [`StateTransitionSteps::ExitSchedules`] as opposed to [`OnExit`],
-        // because [`OnExit`] only runs for one specific variant of the state.
-        self.add_systems(
-            StateTransition,
-            clear_state_scoped_entities::<S>.in_set(StateTransitionSteps::ExitSchedules),
-        )
+        self
     }
 
     #[cfg(feature = "bevy_reflect")]
@@ -253,6 +233,24 @@ impl AppExtStates for SubApp {
         self.register_type_data::<S, crate::reflect::ReflectFreelyMutableState>();
         self
     }
+}
+
+fn enable_state_scoped_entities<S: States>(app: &mut SubApp) {
+    if !app
+        .world()
+        .contains_resource::<Events<StateTransitionEvent<S>>>()
+    {
+        let name = core::any::type_name::<S>();
+        warn!("State scoped entities are enabled for state `{name}`, but the state wasn't initialized in the app!");
+    }
+
+    // Note: We work with `StateTransition` in set
+    // `StateTransitionSystems::ExitSchedules` rather than `OnExit`, because
+    // `OnExit` only runs for one specific variant of the state.
+    app.add_systems(
+        StateTransition,
+        clear_state_scoped_entities::<S>.in_set(StateTransitionSteps::ExitSchedules),
+    );
 }
 
 impl AppExtStates for App {
