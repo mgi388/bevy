@@ -363,9 +363,9 @@ impl RenderLightmaps {
     /// slab index.
     fn create_slab(&mut self, fallback_images: &FallbackImage) -> LightmapSlabIndex {
         let slab_index = LightmapSlabIndex::from(self.slabs.len());
+        self.free_slabs.grow_and_insert(slab_index.into());
         self.slabs
             .push(LightmapSlab::new(fallback_images, self.bindless_supported));
-        self.free_slabs.grow_and_insert(slab_index.into());
         slab_index
     }
 
@@ -427,6 +427,10 @@ impl LightmapSlab {
     }
 
     fn allocate(&mut self, image_id: AssetId<Image>) -> LightmapSlotIndex {
+        assert!(
+            !self.is_full(),
+            "Attempting to allocate on a full lightmap slab"
+        );
         let index = LightmapSlotIndex::from(self.free_slots_bitmask.trailing_zeros());
         self.free_slots_bitmask &= !(1 << u32::from(index));
         self.lightmaps[usize::from(index)].asset_id = Some(image_id);
