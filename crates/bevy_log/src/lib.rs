@@ -331,7 +331,10 @@ impl Plugin for LogPlugin {
             // note: the implementation of `Default` reads from the env var NO_COLOR
             // to decide whether to use ANSI color codes, which is common convention
             // https://no-color.org/
-            let fmt_layer = tracing_subscriber::fmt::Layer::default().with_writer(std::io::stderr);
+            let fmt_layer = tracing_subscriber::fmt::Layer::default()
+                .with_writer(std::io::stderr)
+                .with_file(true)
+                .with_line_number(true);
 
             // bevy_render::renderer logs a `tracy.frame_mark` event every frame
             // at Level::INFO. Formatted logs should omit it.
