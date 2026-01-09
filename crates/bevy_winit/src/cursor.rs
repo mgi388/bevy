@@ -28,11 +28,13 @@ use bevy_ecs::{
     system::{Commands, Local, Query},
     world::{OnRemove, Ref},
 };
+use bevy_image::Image;
 #[cfg(feature = "custom_cursor")]
-use bevy_image::{Image, TextureAtlasLayout};
+use bevy_image::TextureAtlasLayout;
 use bevy_platform::collections::HashSet;
 use bevy_reflect::{std_traits::ReflectDefault, Reflect};
 use bevy_window::{SystemCursorIcon, Window};
+use image::DynamicImage;
 #[cfg(feature = "custom_cursor")]
 use tracing::warn;
 
@@ -106,6 +108,7 @@ pub fn update_cursors(
                     flip_y,
                     rect,
                     hotspot,
+                    custom_size,
                 } = c;
 
                 let cache_key = CustomCursorCacheKey::Image {
@@ -115,6 +118,7 @@ pub fn update_cursors(
                     flip_x: *flip_x,
                     flip_y: *flip_y,
                     rect: *rect,
+                    custom_size: *custom_size,
                 };
 
                 if cursor_cache.0.contains_key(&cache_key) {
@@ -145,12 +149,59 @@ pub fn update_cursors(
                         continue;
                     };
 
+                    let width = (rect.max.x - rect.min.x) as u16;
+                    let height = (rect.max.y - rect.min.y) as u16;
+
+                    let (rgba, width, height, hotspot) = match custom_size {
+                        Some(custom_size) => {
+                            // Need to resize the image using https://docs.rs/image/latest/image/imageops/fn.resize.html
+                            // before creating the cursor
+
+                            // The hotspot needs to be adjusted to the new size
+
+                            let maybe_dyn_image = image::RgbaImage::from_raw(
+                                width as u32,
+                                height as u32,
+                                rgba.clone(),
+                            )
+                            .map(DynamicImage::ImageRgba8);
+
+                            match maybe_dyn_image {
+                                Some(dyn_image) => {
+                                    let resized = dyn_image.resize(
+                                        custom_size.x,
+                                        custom_size.y,
+                                        // image::imageops::FilterType::CatmullRom, // TODO
+                                        image::imageops::FilterType::Nearest,
+                                    );
+
+                                    let rgba = resized.into_rgba8().into_raw();
+
+                                    (
+                                        rgba,
+                                        custom_size.x as u16,
+                                        custom_size.y as u16,
+                                        &(
+                                            (hotspot.0 as f32 / width as f32 * custom_size.x as f32)
+                                                as u16,
+                                            (hotspot.1 as f32 / height as f32
+                                                * custom_size.y as f32)
+                                                as u16,
+                                        ),
+                                    )
+                                }
+                                None => {
+                                    warn!("Could not create DynamicImage from image data");
+                                    // Return the original values in case of failure
+                                    (rgba, width, height, &hotspot)
+                                }
+                            }
+                        }
+                        None => (rgba, width, height, &hotspot),
+                    };
+
                     let source = match WinitCustomCursor::from_rgba(
-                        rgba,
-                        rect.width() as u16,
-                        rect.height() as u16,
-                        hotspot.0,
-                        hotspot.1,
+                        rgba, width, height, hotspot.0, hotspot.1,
                     ) {
                         Ok(source) => source,
                         Err(err) => {

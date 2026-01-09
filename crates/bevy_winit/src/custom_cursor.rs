@@ -40,6 +40,8 @@ pub struct CustomCursorImage {
     /// to adjust this field to account for the flip because it is adjusted
     /// automatically.
     pub hotspot: (u16, u16),
+
+    pub custom_size: Option<UVec2>,
 }
 
 #[cfg(all(target_family = "wasm", target_os = "unknown"))]
