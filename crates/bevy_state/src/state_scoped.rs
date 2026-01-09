@@ -87,7 +87,7 @@ pub fn clear_state_scoped_entities<S: States>(
     };
     for (entity, binding) in &query {
         if binding.0 == *exited {
-            commands.entity(entity).despawn();
+            commands.entity(entity).try_despawn();
         }
     }
 }
