@@ -85,7 +85,7 @@ use bevy_ecs::{
     schedule::{IntoScheduleConfigs, SystemSet},
     system::{Res, ResMut},
 };
-use bevy_math::{Vec3, Vec4};
+use bevy_math::Vec4;
 use bevy_reflect::TypePath;
 
 #[cfg(all(
@@ -503,7 +503,7 @@ struct LineGizmoUniform {
     line_scale: f32,
     /// WebGL2 structs must be 16 byte aligned.
     #[cfg(feature = "webgl")]
-    _padding: Vec3,
+    _padding: bevy_math::Vec3,
 }
 
 /// A collection of gizmos.
