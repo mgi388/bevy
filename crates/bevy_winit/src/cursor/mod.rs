@@ -107,7 +107,7 @@ impl<M: Message> WinitAppRunnerState<M> {
     }
 }
 
-fn update_cursors(
+pub fn update_cursors(
     mut commands: Commands,
     windows: Query<(Entity, Ref<CursorIcon>), With<Window>>,
     #[cfg(feature = "custom_cursor")] cursor_cache: Res<WinitCustomCursorCache>,
