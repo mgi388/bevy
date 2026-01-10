@@ -86,7 +86,7 @@ pub struct HookContext {
     pub entity: Entity,
     /// The [`ComponentId`] this hook was invoked for.
     pub component_id: ComponentId,
-    /// The caller location is `Some` if the `track_caller` feature is enabled.
+    /// The caller location is `Some` if the `track_location` feature is enabled.
     pub caller: MaybeLocation,
     /// Configures how relationship hooks will run
     pub relationship_hook_mode: RelationshipHookMode,
