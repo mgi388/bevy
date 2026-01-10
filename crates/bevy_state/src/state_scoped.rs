@@ -88,7 +88,7 @@ pub fn despawn_entities_on_exit_state<S: States>(
     };
     for (entity, binding) in &query {
         if binding.0 == *exited {
-            commands.entity(entity).despawn();
+            commands.entity(entity).try_despawn();
         }
     }
 }
@@ -154,7 +154,7 @@ pub fn despawn_entities_on_enter_state<S: States>(
     };
     for (entity, binding) in &query {
         if binding.0 == *entered {
-            commands.entity(entity).despawn();
+            commands.entity(entity).try_despawn();
         }
     }
 }
