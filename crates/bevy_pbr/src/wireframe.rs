@@ -1,7 +1,7 @@
 use crate::{
-    DrawMesh, MeshPipeline, MeshPipelineKey, RenderMeshInstanceFlags, RenderMeshInstances,
-    SetMeshBindGroup, SetMeshViewBindGroup, SetMeshViewBindingArrayBindGroup, ViewKeyCache,
-    ViewSpecializationTicks,
+    DrawMesh, MeshPipeline, MeshPipelineKey, RenderLightmaps, RenderMeshInstanceFlags,
+    RenderMeshInstances, SetMeshBindGroup, SetMeshViewBindGroup, SetMeshViewBindingArrayBindGroup,
+    ViewKeyCache, ViewSpecializationTicks,
 };
 use bevy_app::{App, Plugin, PostUpdate, Startup, Update};
 use bevy_asset::{
@@ -756,6 +756,7 @@ pub fn specialize_wireframes(
     mut specialized_material_pipeline_cache: ResMut<SpecializedWireframePipelineCache>,
     mut pipelines: ResMut<SpecializedMeshPipelines<Wireframe3dPipeline>>,
     pipeline: Res<Wireframe3dPipeline>,
+    render_lightmaps: Res<RenderLightmaps>,
     pipeline_cache: Res<PipelineCache>,
     ticks: SystemChangeTick,
 ) {
@@ -825,6 +826,18 @@ pub fn specialize_wireframes(
                 {
                     mesh_key |= MeshPipelineKey::HAS_PREVIOUS_MORPH;
                 }
+            }
+
+            // Even though we don't use the lightmap in the wireframe, the
+            // `SetMeshBindGroup` render command will bind the data for it. So
+            // we need to include the appropriate flag in the mesh pipeline key
+            // to ensure that the necessary bind group layout entries are
+            // present.
+            if render_lightmaps
+                .render_lightmaps
+                .contains_key(visible_entity)
+            {
+                mesh_key |= MeshPipelineKey::LIGHTMAPPED;
             }
 
             let pipeline_id =
