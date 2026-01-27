@@ -161,7 +161,9 @@ pub fn update_viewport_render_target_size(
     mut images: ResMut<Assets<Image>>,
 ) {
     for (viewport, computed_node) in &viewport_query {
-        let render_target = camera_query.get(viewport.camera).unwrap();
+        let Ok(render_target) = camera_query.get(viewport.camera) else {
+            continue;
+        };
         let size = computed_node.size();
 
         let Some(image_handle) = render_target.as_image() else {
