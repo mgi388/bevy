@@ -1837,13 +1837,6 @@ impl<'a> EntityCommands<'a> {
     /// ```
     #[track_caller]
     pub fn despawn(&mut self) {
-        let c = core::panic::Location::caller();
-        log::info!(
-            "despawn called from: {}:{}:{}",
-            c.file(),
-            c.line(),
-            c.column()
-        );
         self.queue_handled(entity_command::despawn(), warn);
     }
 
