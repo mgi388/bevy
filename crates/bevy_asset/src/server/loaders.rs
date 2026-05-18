@@ -35,6 +35,25 @@ impl AssetLoaders {
         self.loaders.get(index).cloned()
     }
 
+    /// Resolve the full type paths for the provided loader indices.
+    fn loader_type_paths_for_indices(&self, indices: &[usize]) -> Vec<&'static str> {
+        indices
+            .iter()
+            .filter_map(|index| {
+                self.get_by_index(*index).and_then(|loader| match loader {
+                    MaybeAssetLoader::Ready(loader) => Some(loader.type_path()),
+                    MaybeAssetLoader::Pending { .. } => {
+                        self.type_path_to_loader
+                            .iter()
+                            .find_map(|(type_path, &mapped_index)| {
+                                (mapped_index == *index).then_some(*type_path)
+                            })
+                    }
+                })
+            })
+            .collect()
+    }
+
     /// Registers a new [`AssetLoader`]. [`AssetLoader`]s must be registered before they can be used.
     pub(crate) fn push<L: AssetLoader>(&mut self, loader: L) {
         let type_path = L::type_path();
@@ -246,9 +265,10 @@ impl AssetLoaders {
             .and_then(|index| self.get_by_index(index))
         {
             Some(loader) => {
+                let loader_type_paths = self.loader_type_paths_for_indices(candidates?);
                 warn!(
-                    "Multiple AssetLoaders found for Asset: {:?}; Path: {:?}; Extension: {:?}",
-                    asset_type_id, asset_path, extension
+                    "Multiple AssetLoaders found for Asset: {:?}; Path: {:?}; Extension: {:?}; Candidate loaders: {:?}",
+                    asset_type_id, asset_path, extension, loader_type_paths
                 );
                 Some(loader)
             }
