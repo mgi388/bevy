@@ -298,7 +298,7 @@ impl ImageFormat {
             #[cfg(feature = "basis-universal")]
             ImageFormat::Basis => &["basis"],
             #[cfg(feature = "bmp")]
-            ImageFormat::Bmp => &["bmp"],
+            ImageFormat::Bmp => &["bmp", "BMP"],
             #[cfg(feature = "dds")]
             ImageFormat::Dds => &["dds"],
             #[cfg(feature = "ff")]
