@@ -532,15 +532,11 @@ pub fn extract_lights(
         for (e, v) in cascades.cascades.iter() {
             if let Ok(entity) = mapper.get(*e) {
                 extracted_cascades.insert(entity, v.clone());
-            } else {
-                break;
             }
         }
         for (e, v) in frusta.frusta.iter() {
             if let Ok(entity) = mapper.get(*e) {
                 extracted_frusta.insert(entity, v.clone());
-            } else {
-                break;
             }
         }
         for (e, v) in visible_entities.entities.iter() {
@@ -551,8 +547,6 @@ pub fn extract_lights(
                         .map(|v| create_render_visible_mesh_entities(&mapper, v))
                         .collect(),
                 );
-            } else {
-                break;
             }
         }
 
