@@ -2920,6 +2920,7 @@ pub struct IsDefaultUiCamera;
 #[derive(SystemParam)]
 pub struct DefaultUiCamera<'w, 's> {
     cameras: Query<'w, 's, (Entity, &'static Camera, &'static RenderTarget)>,
+    name_query: Query<'w, 's, &'static Name>,
     default_cameras: Query<'w, 's, Entity, (With<Camera>, With<IsDefaultUiCamera>)>,
     primary_window: Query<'w, 's, Entity, With<PrimaryWindow>>,
 }
@@ -2929,7 +2930,13 @@ impl<'w, 's> DefaultUiCamera<'w, 's> {
         self.default_cameras.single().ok().or_else(|| {
             // If there isn't a single camera and the query isn't empty, there is two or more cameras queried.
             if !self.default_cameras.is_empty() {
-                once!(warn!("Two or more Entities with IsDefaultUiCamera found when only one Camera with this marker is allowed."));
+                let names = self
+                    .default_cameras
+                    .iter()
+                    .filter_map(|e| self.name_query.get(e).ok().map(|name| name.as_str()))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                once!(warn!("Two or more Entities with IsDefaultUiCamera found when only one Camera with this marker is allowed: {names}"));
             }
             self.cameras
                 .iter()
