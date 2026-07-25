@@ -15,7 +15,9 @@ use crate::{
     component::map_entities, query_data::derive_query_data_impl,
     query_filter::derive_query_filter_impl,
 };
-use bevy_macro_utils::{derive_label, ensure_no_collision, get_struct_fields, BevyManifest};
+use bevy_macro_utils::{
+    derive_label, ensure_no_collision, get_struct_fields, pascal_to_snake_case, BevyManifest,
+};
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::{format_ident, quote, ToTokens};
@@ -531,6 +533,10 @@ pub(crate) fn bevy_ecs_path() -> syn::Path {
     BevyManifest::shared(|manifest| manifest.get_path("bevy_ecs"))
 }
 
+pub(crate) fn bevy_settings_path() -> syn::Path {
+    BevyManifest::shared(|manifest| manifest.get_path("bevy_settings"))
+}
+
 /// Implement the `Event` trait.
 #[proc_macro_derive(Event, attributes(event))]
 pub fn derive_event(input: TokenStream) -> TokenStream {
@@ -565,6 +571,147 @@ pub fn derive_message(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(Resource)]
 pub fn derive_resource(input: TokenStream) -> TokenStream {
     component::derive_resource(input)
+}
+
+/// Cheat sheet for derive syntax,
+///
+/// ## Group Override
+/// ```ignore
+/// #[derive(SettingsGroup)]
+/// #[settings_group(group = "my_group")]
+/// struct MySettings {
+///     test: true
+/// }
+/// ```
+/// results in:
+/// ```ignore
+/// [my_group]
+/// test = true
+/// ```
+///
+/// ## File Override
+/// ```ignore
+/// #[derive(SettingsGroup)]
+/// #[settings_group(file = "my_file")]
+/// struct MySettings {
+///     test: true
+/// }
+/// ```
+/// results in a different file being used as the source of the settings.
+///
+/// ## Key Override
+/// Only valid for enums, as struct keys are always derived from the field name.
+/// ```ignore
+/// #[derive(SettingsGroup)]
+/// #[settings_group(key = "my_key")]
+/// enum MySettingsEnum {
+///     Variant1,
+///     Variant2
+/// };
+/// ```
+/// results in:
+/// ```ignore
+/// [my_settings_enum]
+/// my_key = "variant1"
+/// ```
+#[proc_macro_derive(SettingsGroup, attributes(settings_group))]
+pub fn derive_settings_group(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+
+    let name = &input.ident;
+
+    let path = bevy_settings_path();
+
+    let (override_group_name, override_key_name, override_file) = {
+        let mut override_group_name: Option<String> = None;
+        let mut override_key_name: Option<String> = None;
+        let mut override_file: Option<String> = None;
+
+        input
+            .attrs
+            .iter()
+            .find(|attr| attr.path().is_ident("settings_group"))
+            .and_then(|attr| {
+                attr.parse_nested_meta(|meta| {
+                    if meta.path.is_ident("group") {
+                        let value = meta.value()?;
+                        let s: syn::LitStr = value.parse()?;
+                        override_group_name = Some(s.value());
+                        Ok(())
+                    } else if meta.path.is_ident("key") {
+                        let value = meta.value()?;
+                        let s: syn::LitStr = value.parse()?;
+                        override_key_name = Some(s.value());
+                        Ok(())
+                    } else if meta.path.is_ident("file") {
+                        let value = meta.value()?;
+                        let s: syn::LitStr = value.parse()?;
+                        override_file = Some(s.value());
+                        Ok(())
+                    } else {
+                        Err(meta.error("unsupported attribute"))
+                    }
+                })
+                .ok()
+            });
+
+        (override_group_name, override_key_name, override_file)
+    };
+
+    let (group_name, key_name) = match &input.data {
+        Data::Struct(_) => {
+            if override_key_name.is_some() {
+                return syn::Error::new(
+                    Span::call_site(),
+                    "The `key` attribute is not supported for structs",
+                )
+                .into_compile_error()
+                .into();
+            }
+            let group_name = override_group_name.unwrap_or(pascal_to_snake_case(&name.to_string()));
+
+            (group_name, override_key_name)
+        }
+        Data::Enum(_) => {
+            let group_name = override_group_name.unwrap_or(pascal_to_snake_case(&name.to_string()));
+            let key_name = override_key_name.or(Some(pascal_to_snake_case(&name.to_string())));
+
+            (group_name, key_name)
+        }
+        _ => {
+            return syn::Error::new(
+                Span::call_site(),
+                "SettingsGroup can only be derived for structs and enums",
+            )
+            .into_compile_error()
+            .into();
+        }
+    };
+
+    let key_name = key_name
+        .map(|f| quote! { ::core::option::Option::Some(#f) })
+        .unwrap_or(quote! { ::core::option::Option::None });
+    let file_name = override_file
+        .map(|f| quote! { ::core::option::Option::Some(#f) })
+        .unwrap_or(quote! { ::core::option::Option::None });
+
+    let expanded = quote! {
+        impl #path::SettingsGroup for #name {
+            fn settings_group_name() -> &'static str {
+                #group_name
+            }
+
+            fn settings_key_name() -> ::core::option::Option<&'static str> {
+                #key_name
+            }
+
+            fn settings_source() -> ::core::option::Option<&'static str> {
+                #file_name
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
 }
 
 /// Cheat sheet for derive syntax,
@@ -639,7 +786,7 @@ pub fn derive_resource(input: TokenStream) -> TokenStream {
 /// #[component(hook_name = function)]
 /// struct MyComponent;
 /// ```
-/// where `hook_name` is `on_add`, `on_insert`, `on_replace` or `on_remove`;  
+/// where `hook_name` is `on_add`, `on_insert`, `on_replace` or `on_remove`;
 /// `function` can be either a path, e.g. `some_function::<Self>`,
 /// or a function call that returns a function that can be turned into
 /// a `ComponentHook`, e.g. `get_closure("Hi!")`.

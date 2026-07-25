@@ -439,6 +439,9 @@ debug = ["bevy_utils/debug", "bevy_ecs/debug"]
 
 screenrecording = ["bevy_dev_tools/screenrecording"]
 
+# Keep feature for bevy-settings as bevy_settings
+bevy_settings = ["bevy-settings"]
+
 [dependencies]
 # bevy (no_std)
 bevy_app = { path = "../bevy_app", version = "0.18.0", default-features = false, features = [
@@ -508,6 +511,7 @@ bevy_input_focus = { path = "../bevy_input_focus", optional = true, version = "0
 ] }
 bevy_pbr = { path = "../bevy_pbr", optional = true, version = "0.18.0" }
 bevy_picking = { path = "../bevy_picking", optional = true, version = "0.18.0" }
+bevy-settings = { path = "../bevy_settings", optional = true, version = "0.18.0" }
 bevy_remote = { path = "../bevy_remote", optional = true, version = "0.18.0" }
 bevy_render = { path = "../bevy_render", optional = true, version = "0.18.0" }
 bevy_scene = { path = "../bevy_scene", optional = true, version = "0.18.0" }

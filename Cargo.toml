@@ -399,6 +399,9 @@ bevy_input_focus = ["bevy_internal/bevy_input_focus"]
 # Experimental headless widget collection for Bevy UI.
 experimental_bevy_ui_widgets = ["bevy_internal/bevy_ui_widgets"]
 
+# Load and save settings
+bevy_settings = ["bevy_internal/bevy_settings"]
+
 # Feathers widget collection.
 experimental_bevy_feathers = [
   "bevy_internal/bevy_feathers",
@@ -734,6 +737,7 @@ bevy_gizmos = { path = "crates/bevy_gizmos", version = "0.18.0", default-feature
 bevy_image = { path = "crates/bevy_image", version = "0.18.0", default-features = false }
 bevy_reflect = { path = "crates/bevy_reflect", version = "0.18.0", default-features = false }
 bevy_render = { path = "crates/bevy_render", version = "0.18.0", default-features = false }
+bevy-settings = { path = "crates/bevy_settings", version = "0.18.0", default-features = false }
 bevy_state = { path = "crates/bevy_state", version = "0.18.0", default-features = false }
 # Needed to poll Task examples
 futures-lite = "2.0.1"
@@ -5214,6 +5218,18 @@ required-features = ["experimental_bevy_ui_widgets"]
 name = "Scrollbars"
 description = "Demonstrates use of core scrollbar in Bevy UI"
 category = "UI (User Interface)"
+wasm = true
+
+[[example]]
+name = "settings"
+path = "examples/app/settings.rs"
+doc-scrape-examples = true
+required-features = ["bevy_settings"]
+
+[package.metadata.example.settings]
+name = "Settings"
+description = "Demonstrates persistence of settings"
+category = "Application"
 wasm = true
 
 [[example]]
