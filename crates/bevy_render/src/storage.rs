@@ -11,15 +11,15 @@ use bevy_utils::default;
 use encase::{internal::WriteInto, ShaderType};
 use wgpu::util::BufferInitDescriptor;
 
-/// Adds [`ShaderStorageBuffer`] as an asset that is extracted and uploaded to the GPU.
+/// Adds [`ShaderBuffer`] as an asset that is extracted and uploaded to the GPU.
 #[derive(Default)]
 pub struct StoragePlugin;
 
 impl Plugin for StoragePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(RenderAssetPlugin::<GpuShaderStorageBuffer>::default())
-            .init_asset::<ShaderStorageBuffer>()
-            .register_asset_reflect::<ShaderStorageBuffer>();
+            .init_asset::<ShaderBuffer>()
+            .register_asset_reflect::<ShaderBuffer>();
     }
 }
 
@@ -27,7 +27,7 @@ impl Plugin for StoragePlugin {
 #[derive(Asset, Reflect, Debug, Clone)]
 #[reflect(opaque)]
 #[reflect(Default, Debug, Clone)]
-pub struct ShaderStorageBuffer {
+pub struct ShaderBuffer {
     /// Optional data used to initialize the buffer.
     pub data: Option<Vec<u8>>,
     /// The buffer description used to create the buffer.
@@ -36,7 +36,7 @@ pub struct ShaderStorageBuffer {
     pub asset_usage: RenderAssetUsages,
 }
 
-impl Default for ShaderStorageBuffer {
+impl Default for ShaderBuffer {
     fn default() -> Self {
         Self {
             data: None,
@@ -51,10 +51,10 @@ impl Default for ShaderStorageBuffer {
     }
 }
 
-impl ShaderStorageBuffer {
+impl ShaderBuffer {
     /// Creates a new storage buffer with the given data and asset usage.
     pub fn new(data: &[u8], asset_usage: RenderAssetUsages) -> Self {
-        let mut storage = ShaderStorageBuffer {
+        let mut storage = ShaderBuffer {
             data: Some(data.to_vec()),
             ..default()
         };
@@ -64,7 +64,7 @@ impl ShaderStorageBuffer {
 
     /// Creates a new storage buffer with the given size and asset usage.
     pub fn with_size(size: usize, asset_usage: RenderAssetUsages) -> Self {
-        let mut storage = ShaderStorageBuffer {
+        let mut storage = ShaderBuffer {
             data: None,
             ..default()
         };
@@ -86,7 +86,7 @@ impl ShaderStorageBuffer {
     }
 }
 
-impl<T> From<T> for ShaderStorageBuffer
+impl<T> From<T> for ShaderBuffer
 where
     T: ShaderType + WriteInto,
 {
@@ -105,7 +105,7 @@ pub struct GpuShaderStorageBuffer {
 }
 
 impl RenderAsset for GpuShaderStorageBuffer {
-    type SourceAsset = ShaderStorageBuffer;
+    type SourceAsset = ShaderBuffer;
     type Param = SRes<RenderDevice>;
 
     fn asset_usage(source_asset: &Self::SourceAsset) -> RenderAssetUsages {

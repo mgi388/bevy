@@ -466,7 +466,7 @@ pub fn derive_as_bind_group(ast: syn::DeriveInput) -> Result<TokenStream> {
                         (
                             #binding_index,
                             #render_path::render_resource::OwnedBindingResource::Buffer({
-                                let handle: &#asset_path::Handle<#render_path::storage::ShaderStorageBuffer> = (&self.#field_name);
+                                let handle: &#asset_path::Handle<#render_path::storage::ShaderBuffer> = (&self.#field_name);
                                 storage_buffers.get(handle).ok_or_else(|| #render_path::render_resource::AsBindGroupError::RetryNextUpdate)?.buffer.clone()
                             })
                         )
