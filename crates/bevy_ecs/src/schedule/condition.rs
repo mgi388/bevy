@@ -75,6 +75,13 @@ pub type BoxedCondition<In = ()> = Box<dyn ReadOnlySystem<In = In, Out = bool>>;
 pub trait SystemCondition<Marker, In: SystemInput = ()>:
     IntoSystem<In, bool, Marker, System: ReadOnlySystem>
 {
+    fn and_then<M, C: SystemCondition<M, In>>(self, and_then: C) -> And<Self::System, C::System> {
+        self.and(and_then)
+    }
+    fn or_else<M, C: SystemCondition<M, In>>(self, or_else: C) -> Or<Self::System, C::System> {
+        self.or(or_else)
+    }
+
     /// Returns a new run condition that only returns `true`
     /// if both this one and the passed `and` return `true`.
     ///
