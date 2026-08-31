@@ -522,6 +522,19 @@ impl<'a> EntityCommands<'a> {
         })
     }
 
+    /// Despawns entities that relate to this one via the given
+    /// [`RelationshipTarget`]. This entity will not be despawned.
+    ///
+    /// # Note
+    ///
+    /// If the entity does not exist when this command is executed, the
+    /// resulting error will be ignored.
+    pub fn try_despawn_related<S: RelationshipTarget>(&mut self) -> &mut Self {
+        self.queue_silenced(move |mut entity: EntityWorldMut| {
+            entity.despawn_related::<S>();
+        })
+    }
+
     /// Despawns the children of this entity.
     /// This entity will not be despawned.
     ///
