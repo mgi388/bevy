@@ -75,7 +75,6 @@ use bevy_app::{prelude::*, AnimationSystems, HierarchyPropagatePlugin, Propagate
 use bevy_camera::CameraUpdateSystems;
 use bevy_ecs::prelude::*;
 use bevy_input::InputSystems;
-use bevy_transform::TransformSystems;
 use layout::ui_surface::UiSurface;
 use stack::ui_stack_system;
 pub use stack::UiStack;
@@ -177,9 +176,7 @@ impl Plugin for UiPlugin {
                 widget::viewport_picking.in_set(PickingSystems::PostInput),
             );
 
-        let ui_layout_system_config = ui_layout_system
-            .in_set(UiSystems::Layout)
-            .before(TransformSystems::Propagate);
+        let ui_layout_system_config = ui_layout_system.in_set(UiSystems::Layout);
 
         let ui_layout_system_config = ui_layout_system_config
             // Text and Text2D operate on disjoint sets of entities
@@ -193,13 +190,13 @@ impl Plugin for UiPlugin {
                 ui_layout_system_config,
                 ui_stack_system
                     .in_set(UiSystems::Stack)
+                    .before(UiSystems::PostLayout)
                     // These systems don't care about stack index
                     .ambiguous_with(widget::measure_text_system)
-                    .ambiguous_with(update_clipping_system)
                     .ambiguous_with(ui_layout_system)
                     .ambiguous_with(widget::update_viewport_render_target_size)
                     .in_set(AmbiguousWithText),
-                update_clipping_system.after(TransformSystems::Propagate),
+                update_clipping_system.in_set(UiSystems::PostLayout),
                 // Potential conflicts: `Assets<Image>`
                 // They run independently since `widget::image_node_system` will only ever observe
                 // its own ImageNode, and `widget::text_system` & `bevy_text::update_text2d_layout`
