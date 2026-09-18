@@ -267,7 +267,8 @@ impl<T: ShaderType + WriteInto> DynamicUniformBuffer<T> {
     /// If there is no GPU-side buffer allocated to hold the data currently stored, or if a GPU-side buffer previously
     /// allocated does not have enough capacity to hold `max_count` elements, a new GPU-side buffer is created.
     ///
-    /// Returns `None` if there is no allocated GPU-side buffer, and `max_count` is 0.
+    /// Returns `None` if there is no allocated GPU-side buffer, if `max_count` is 0, or if the
+    /// staging write cannot be acquired. The latter happens when the device is lost, for example.
     ///
     /// [`push`]: Self::push
     /// [`write_buffer`]: Self::write_buffer
@@ -307,9 +308,8 @@ impl<T: ShaderType + WriteInto> DynamicUniformBuffer<T> {
         }
 
         if let Some(buffer) = self.buffer.as_deref() {
-            let buffer_view = queue
-                .write_buffer_with(buffer, 0, NonZero::<u64>::new(buffer.size())?)
-                .unwrap();
+            let buffer_view =
+                queue.write_buffer_with(buffer, 0, NonZero::<u64>::new(buffer.size())?)?;
             Some(DynamicUniformBufferWriter {
                 buffer: encase::DynamicUniformBuffer::new_with_alignment(
                     QueueWriteBufferViewWrapper {
