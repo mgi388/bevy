@@ -2691,7 +2691,8 @@ impl BorderRadius {
         viewport_size: Vec2,
     ) -> f32 {
         if let Ok(radius) = radius.resolve(scale_factor, min_length, viewport_size) {
-            radius.clamp(0., 0.5 * min_length)
+            // `clamp` panics when `min_length` is NaN.
+            radius.max(0.).min(0.5 * min_length)
         } else {
             0.
         }
@@ -3014,8 +3015,10 @@ impl ComputedUiRenderTargetInfo {
 
 #[cfg(test)]
 mod tests {
+    use crate::BorderRadius;
     use crate::ComputedNode;
     use crate::GridPlacement;
+    use crate::Val;
     use bevy_math::{Rect, Vec2};
     use bevy_sprite::BorderRect;
 
@@ -3185,5 +3188,19 @@ mod tests {
 
         assert_eq!(content_box.min, Vec2::new(-40.0 + 4.0, -20.0 + 2.0));
         assert_eq!(content_box.max, Vec2::new(40.0 - 6.0, 20.0 - 8.0));
+    }
+
+    #[test]
+    fn border_radius_resolves_for_nan_node_size() {
+        // A node at a NaN position has a NaN size after layout rounding.
+        for radius in [Val::Px(10.0), Val::Percent(50.0)] {
+            let resolved =
+                BorderRadius::all(radius).resolve(1.0, Vec2::NAN, Vec2::new(800.0, 600.0));
+
+            assert!(resolved.top_left.is_finite());
+            assert!(resolved.top_right.is_finite());
+            assert!(resolved.bottom_right.is_finite());
+            assert!(resolved.bottom_left.is_finite());
+        }
     }
 }
